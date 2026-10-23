@@ -18,7 +18,7 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { enabled: true, words: Vec::new(), hold_ms: 100, max_items: 12 }
+        Self { enabled: true, words: Vec::new(), hold_ms: 150, max_items: 8 }
     }
 }
 
