@@ -22,9 +22,9 @@ pub const ID_EXIT: u32 = 103;
 
 fn tip(enabled: bool) -> &'static str {
     if enabled {
-        "ClipRing — включён. Удерживайте Win, чтобы выбрать из буфера"
+        "Shortcut Ring — включён. Удерживайте Win, чтобы выбрать из буфера"
     } else {
-        "ClipRing — выключен"
+        "Shortcut Ring — выключен"
     }
 }
 
