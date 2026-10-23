@@ -1,8 +1,8 @@
 [package]
-name = "clipring"
+name = "shortcut_ring"
 version = "0.1.0"
-edition = "2021"
-description = "Hold Win to pick a clipboard item from a ring around the cursor"
+edition = "2026"
+description = "shortcut_ring"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
