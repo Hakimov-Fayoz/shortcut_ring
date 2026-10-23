@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-pub const HOLD_MS_RANGE: (u32, u32) = (100, 3000);
+pub const HOLD_MS_RANGE: (u32, u32) = (10, 3000);
 pub const MAX_ITEMS_RANGE: (usize, usize) = (1, 24);
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -18,7 +18,7 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { enabled: true, words: Vec::new(), hold_ms: 350, max_items: 12 }
+        Self { enabled: true, words: Vec::new(), hold_ms: 100, max_items: 12 }
     }
 }
 
