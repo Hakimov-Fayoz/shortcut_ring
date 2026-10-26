@@ -3,91 +3,119 @@ using System.Text.Json;
 
 namespace WinHoldMenu.Configuration;
 
-/// <summary>Portable settings: settings.json lives next to the exe.</summary>
 internal sealed class Settings
 {
-    public int HoldMs = 150;                 // how long Win must be held
-    public bool TriggerOnHover = true;       // true: act on hover, false: act when Win is released
-    public int HoverDwellMs = 180;           // hover time before action (hover mode)
-    public int HistorySize = 5;              // last N clipboard items
-    public int MaxWindows = 8;               // windows shown on the right
-    public string[] Pinned =                 // pre-written snippets (shown first)
+    private const int MaxPinnedTexts = 5;
+
+    public int HoldMs = 150;
+    public bool TriggerOnHover = true;
+    public int HoverDwellMs = 180;
+    public int HistorySize = 5;
+    public int MaxWindows = 8;
+    public string[] PinnedTexts =
     {
         "Здравствуйте!",
         "Спасибо, с уважением",
         "me@example.com",
     };
 
-    public static string FilePath => System.IO.Path.Combine(AppContext.BaseDirectory, "settings.json");
+    public static string FilePath => Path.Combine(AppContext.BaseDirectory, "settings.json");
 
     public static Settings Load()
     {
-        var s = new Settings();
-        try
-        {
-            if (File.Exists(FilePath))
-            {
-                using var doc = JsonDocument.Parse(File.ReadAllText(FilePath), new JsonDocumentOptions
-                {
-                    CommentHandling = JsonCommentHandling.Skip,
-                    AllowTrailingCommas = true,
-                });
-                var r = doc.RootElement;
-                s.HoldMs = GetInt(r, "holdMs", s.HoldMs);
-                s.HoverDwellMs = GetInt(r, "hoverDwellMs", s.HoverDwellMs);
-                s.HistorySize = GetInt(r, "historySize", s.HistorySize);
-                s.MaxWindows = GetInt(r, "maxWindows", s.MaxWindows);
+        var settings = new Settings();
 
-                if (r.TryGetProperty("trigger", out JsonElement t) && t.ValueKind == JsonValueKind.String)
-                    s.TriggerOnHover = !string.Equals(t.GetString(), "release", StringComparison.OrdinalIgnoreCase);
+        if (File.Exists(FilePath)) settings.TryReadFile();
+        else settings.TrySave();
 
-                if (r.TryGetProperty("pinned", out JsonElement p) && p.ValueKind == JsonValueKind.Array)
-                {
-                    s.Pinned = p.EnumerateArray()
-                        .Where(e => e.ValueKind == JsonValueKind.String)
-                        .Select(e => e.GetString() ?? "")
-                        .Where(x => x.Length > 0)
-                        .ToArray();
-                }
-            }
-            else
-            {
-                s.Save();
-            }
-        }
-        catch
-        {
-            // broken file -> defaults
-        }
-
-        s.HoldMs = Math.Clamp(s.HoldMs, 50, 2000);
-        s.HoverDwellMs = Math.Clamp(s.HoverDwellMs, 0, 2000);
-        s.HistorySize = Math.Clamp(s.HistorySize, 1, 10);
-        s.MaxWindows = Math.Clamp(s.MaxWindows, 1, 12);
-        if (s.Pinned.Length > 5) s.Pinned = s.Pinned.Take(5).ToArray();
-        return s;
+        settings.ClampToAllowedRanges();
+        return settings;
     }
 
-    private static int GetInt(JsonElement root, string name, int def) =>
-        root.TryGetProperty(name, out JsonElement v) && v.TryGetInt32(out int i) ? i : def;
-
-    public void Save()
+    public void TrySave()
     {
-        using var fs = File.Create(FilePath);
-        using var w = new Utf8JsonWriter(fs, new JsonWriterOptions
+        try
+        {
+            Save();
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+
+    private void TryReadFile()
+    {
+        try
+        {
+            ReadFile();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+        }
+    }
+
+    private void ReadFile()
+    {
+        var options = new JsonDocumentOptions
+        {
+            CommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true,
+        };
+        using var document = JsonDocument.Parse(File.ReadAllText(FilePath), options);
+        JsonElement root = document.RootElement;
+
+        HoldMs = ReadInt(root, "holdMs", HoldMs);
+        HoverDwellMs = ReadInt(root, "hoverDwellMs", HoverDwellMs);
+        HistorySize = ReadInt(root, "historySize", HistorySize);
+        MaxWindows = ReadInt(root, "maxWindows", MaxWindows);
+
+        if (root.TryGetProperty("trigger", out JsonElement trigger) && trigger.ValueKind == JsonValueKind.String)
+            TriggerOnHover = !string.Equals(trigger.GetString(), "release", StringComparison.OrdinalIgnoreCase);
+
+        if (root.TryGetProperty("pinned", out JsonElement pinned) && pinned.ValueKind == JsonValueKind.Array)
+            PinnedTexts = ReadNonEmptyStrings(pinned);
+    }
+
+    private static int ReadInt(JsonElement root, string name, int defaultValue) =>
+        root.TryGetProperty(name, out JsonElement value) && value.TryGetInt32(out int number) ? number : defaultValue;
+
+    private static string[] ReadNonEmptyStrings(JsonElement array) =>
+        array.EnumerateArray()
+            .Where(item => item.ValueKind == JsonValueKind.String)
+            .Select(item => item.GetString() ?? "")
+            .Where(text => text.Length > 0)
+            .ToArray();
+
+    private void ClampToAllowedRanges()
+    {
+        HoldMs = Math.Clamp(HoldMs, 50, 2000);
+        HoverDwellMs = Math.Clamp(HoverDwellMs, 0, 2000);
+        HistorySize = Math.Clamp(HistorySize, 1, 10);
+        MaxWindows = Math.Clamp(MaxWindows, 1, 12);
+        PinnedTexts = PinnedTexts.Take(MaxPinnedTexts).ToArray();
+    }
+
+    private void Save()
+    {
+        using var file = File.Create(FilePath);
+        using var writer = new Utf8JsonWriter(file, new JsonWriterOptions
         {
             Indented = true,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         });
-        w.WriteStartObject();
-        w.WriteNumber("holdMs", HoldMs);
-        w.WriteString("trigger", TriggerOnHover ? "hover" : "release");
-        w.WriteNumber("hoverDwellMs", HoverDwellMs);
-        w.WriteNumber("historySize", HistorySize);
-        w.WriteNumber("maxWindows", MaxWindows);
-        w.WriteStartArray("pinned");
-        foreach (var p in Pinned) w.WriteStringValue(p);
-        w.WriteEndArray();
-        w.WriteEndObject();
+
+        writer.WriteStartObject();
+        writer.WriteNumber("holdMs", HoldMs);
+        writer.WriteString("trigger", TriggerOnHover ? "hover" : "release");
+        writer.WriteNumber("hoverDwellMs", HoverDwellMs);
+        writer.WriteNumber("historySize", HistorySize);
+        writer.WriteNumber("maxWindows", MaxWindows);
+        writer.WriteStartArray("pinned");
+        foreach (string text in PinnedTexts) writer.WriteStringValue(text);
+        writer.WriteEndArray();
+        writer.WriteEndObject();
     }
 }

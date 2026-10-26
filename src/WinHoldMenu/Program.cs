@@ -5,20 +5,23 @@ namespace WinHoldMenu;
 
 public static class Program
 {
+    private const string SingleInstanceName = @"Local\WinHoldMenu.SingleInstance";
+
     [STAThread]
     private static int Main()
     {
-        // single instance: second launch just exits
-        using var mutex = new Mutex(true, @"Local\WinHoldMenu.SingleInstance", out bool isNew);
-        if (!isNew) return 0;
+        using var mutex = new Mutex(true, SingleInstanceName, out bool isFirstInstance);
+        if (!isFirstInstance) return 0;
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
-        Application.Start(args =>
-        {
-            var queue = DispatcherQueue.GetForCurrentThread();
-            SynchronizationContext.SetSynchronizationContext(new DispatcherQueueSynchronizationContext(queue));
-            _ = new App();
-        });
+        Application.Start(_ => StartApp());
         return 0;
+    }
+
+    private static void StartApp()
+    {
+        var uiQueue = DispatcherQueue.GetForCurrentThread();
+        SynchronizationContext.SetSynchronizationContext(new DispatcherQueueSynchronizationContext(uiQueue));
+        _ = new App();
     }
 }

@@ -2,8 +2,6 @@ using System.Runtime.InteropServices;
 
 namespace WinHoldMenu.Interop;
 
-// Win32 structures used by P/Invoke signatures in Native.cs.
-
 [StructLayout(LayoutKind.Sequential)] internal struct POINT { public int X, Y; }
 [StructLayout(LayoutKind.Sequential)] internal struct RECT { public int Left, Top, Right, Bottom; }
 
@@ -70,4 +68,23 @@ internal struct BITMAPINFOHEADER
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct BITMAPINFO { public BITMAPINFOHEADER bmiHeader; public uint bmiColors; }
+internal struct BITMAPINFO
+{
+    public BITMAPINFOHEADER bmiHeader;
+    public uint bmiColors;
+
+    public static BITMAPINFO TopDown32Bit(int size) => new()
+    {
+        bmiHeader = new BITMAPINFOHEADER
+        {
+            biSize = (uint)Marshal.SizeOf<BITMAPINFOHEADER>(),
+            biWidth = size,
+            biHeight = -size,
+            biPlanes = 1,
+            biBitCount = 32,
+        },
+    };
+}
+
+[StructLayout(LayoutKind.Sequential)]
+internal struct ICONINFO { public int fIcon; public uint xHotspot, yHotspot; public IntPtr hbmMask, hbmColor; }
