@@ -1,2 +1,4 @@
-/target
-/rust
+bin/
+obj/
+.vs/
+*.user
