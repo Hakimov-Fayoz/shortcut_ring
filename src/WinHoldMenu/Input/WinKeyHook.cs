@@ -1,6 +1,7 @@
 using Microsoft.UI.Dispatching;
+using WinHoldMenu.Interop;
 
-namespace WinHoldMenu;
+namespace WinHoldMenu.Input;
 
 /// <summary>
 /// Low-level keyboard hook that detects "Win held for N ms" without breaking

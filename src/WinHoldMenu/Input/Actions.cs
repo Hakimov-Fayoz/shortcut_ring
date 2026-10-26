@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
+using WinHoldMenu.Interop;
 
-namespace WinHoldMenu;
+namespace WinHoldMenu.Input;
 
 /// <summary>Synthetic input + window activation helpers.</summary>
 internal static class Actions

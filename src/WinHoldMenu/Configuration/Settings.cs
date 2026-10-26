@@ -1,7 +1,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
-namespace WinHoldMenu;
+namespace WinHoldMenu.Configuration;
 
 /// <summary>Portable settings: settings.json lives next to the exe.</summary>
 internal sealed class Settings

@@ -1,4 +1,4 @@
-namespace WinHoldMenu;
+namespace WinHoldMenu.ClipboardHistory;
 
 /// <summary>Last N distinct clipboard texts, newest first.</summary>
 internal sealed class ClipStore

@@ -1,4 +1,19 @@
+# Build output
 bin/
 obj/
+artifacts/
+publish/
+
+# IDE
 .vs/
+.vscode/
+.idea/
 *.user
+*.suo
+
+# Runtime
+settings.json
+
+# OS
+.DS_Store
+Thumbs.db
