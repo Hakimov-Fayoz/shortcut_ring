@@ -13,7 +13,7 @@ internal static class KeyboardInput
     private const ushort UnassignedKey = 0xE8;
     private const ushort KeyV = 0x56;
 
-    public static bool IsWinKey(uint key) => key == Native.VK_LWIN || key == Native.VK_RWIN;
+    public static bool IsWinKey(uint key) => key == Native.VK_LMENU || key == Native.VK_RMENU;
 
     public static void PreventStartMenuOnWinRelease() => Send(Press(UnassignedKey), Release(UnassignedKey));
 
