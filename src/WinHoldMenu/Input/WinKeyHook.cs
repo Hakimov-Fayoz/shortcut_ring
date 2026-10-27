@@ -143,7 +143,7 @@ internal sealed class WinKeyHook : IDisposable
     }
 
     private static bool IsCtrlShiftOrAltDown() =>
-        IsKeyDown(Native.VK_CONTROL) || IsKeyDown(Native.VK_SHIFT) || IsKeyDown(Native.VK_MENU);
+        IsKeyDown(Native.VK_CONTROL) || IsKeyDown(Native.VK_SHIFT);
 
     private static bool IsKeyDown(int key) => (Native.GetAsyncKeyState(key) & KeyIsDownBit) != 0;
 
